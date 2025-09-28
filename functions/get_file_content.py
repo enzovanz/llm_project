@@ -1,5 +1,6 @@
 import os
 from config import CHAR_LIMIT
+from google.genai import types
 
 def get_file_content(working_directory, file_path):
     try:
@@ -16,7 +17,6 @@ def get_file_content(working_directory, file_path):
 
         with open(full_path, "r") as f:
             file_content_string = f.read(CHAR_LIMIT + 1)
-            print(file_size)
 
             if file_size > CHAR_LIMIT:
                 file_content_string += f' [...File "{full_path}" truncated at 10000 characters]'
@@ -27,6 +27,18 @@ def get_file_content(working_directory, file_path):
     except Exception as e:
         return f"Error: {e}"
 
-
+schema_get_file_content = types.FunctionDeclaration(
+    name="get_file_content",
+    description="Read the content inside a file",
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        properties={
+            "file_path": types.Schema(
+                type=types.Type.STRING,
+                description="The file to be read",
+            ),
+        },
+    ),
+)
 
 
