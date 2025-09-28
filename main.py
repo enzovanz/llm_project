@@ -35,43 +35,41 @@ available_functions = types.Tool(
     ]
 )
 
-messages = types.Content(role="user", parts=[types.Part(text=user_prompt)])
+messages = [types.Content(role="user", parts=[types.Part(text=user_prompt)])]
 
 client = genai.Client(api_key=api_key)
 
-response = client.models.generate_content(
-    model="gemini-2.0-flash-001", 
-    contents=messages, 
-    config=types.GenerateContentConfig(tools=[available_functions], system_instruction=system_prompt)
-)
+for i in range(20):
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.0-flash-001", 
+            contents=messages, 
+            config=types.GenerateContentConfig(tools=[available_functions], system_instruction=system_prompt)
+        )
 
-prompt_tokens = response.usage_metadata.prompt_token_count
-output_tokens = response.usage_metadata.candidates_token_count
-estimated_cost = (prompt_tokens / 1e6 * cost_prompt) + \
-                 (output_tokens / 1e6 * cost_output)
+        for candidate in response.candidates:
+            messages.append(candidate.content)
 
-
-if verbose_flag:
-    print(f"User prompt: {user_prompt}")
-    print("Prompt tokens:", prompt_tokens)
-    print("Response tokens:", output_tokens)
-    print(f"Estimated cost: ${estimated_cost:.6f}")
-    print("------------------------------------")
-    if response.function_calls:
-        try:
+        if response.function_calls:
             function_call_part = response.function_calls[0]
-            function_call_result = call_function(function_call_part, verbose_flag)
-            print(f"-> {function_call_result.parts[0].function_response.response}")
-        except:
-            raise Exception("Fatal error")
-    else:
+        
+            if verbose_flag:
+                function_call_result = call_function(function_call_part, verbose_flag)
+                messages.append(function_call_result)
+                continue
+        
+        if not response.candidates:
+            raise Exception("No candidates returned")
+    
+        assistant_content = response.candidates[0].content
+
+        messages.append(assistant_content)
+
         print(response.text)
-else:
-    if response.function_calls:
-        function_call_part = response.function_calls[0]
-        print(f"Calling function: {function_call_part.name}({function_call_part.args})")
-    else:
-        print(response.text)
+        break
+
+    except Exception as e:
+        raise Exception(f"Fatal Error: {e}")
 
 
 

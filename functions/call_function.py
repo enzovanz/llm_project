@@ -6,13 +6,14 @@ from google.genai import types
 
 def call_function(function_call_part, verbose=False):
     name = function_call_part.name
-    args = function_call_part.args
+    args = dict(function_call_part.args)
+    args["working_directory"] = "./calculator"
+    
     if verbose:
         print(f"Calling function: {name}({args})")
     else:
         print(f" - Calling function: {name}")
 
-    args["working_directory"] = "./calculator"
     
     function_dict = {
         "get_file_content" : get_file_content,
