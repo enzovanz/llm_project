@@ -10,7 +10,7 @@ class Calculator:
         }
         self.precedence = {
             "+": 1,
-            "-": 3,
+            "-": 1,
             "*": 2,
             "/": 2,
         }
